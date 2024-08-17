@@ -302,8 +302,8 @@ else:
             user_input = st.text_area("Напишите ваш текст ниже:")
             if st.button('Сохранить текст'):
 	            print("1111111")
-	            add_content(book_id, chapter_id, user_input, st.session_state.question_index )
-	            print("22222222")
+	            # add_content(book_id, chapter_id, user_input, st.session_state.question_index )
+	            # print("22222222")
 	            st.success("Ваш текст был сохранен!")
 	            prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
 	            api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
@@ -325,8 +325,8 @@ else:
         else:
             user_input = st.text_area("Напишите ваш текст ниже:")
             if st.button('Сохранить текст'):
-                add_content(book_id, chapter_id, user_input, st.session_state.question_index )
-                st.success("Ваш текст был сохранен!")
+                #add_content(book_id, chapter_id, user_input, st.session_state.question_index )
+                #st.success("Ваш текст был сохранен!")
                 prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
                 api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
                 client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
