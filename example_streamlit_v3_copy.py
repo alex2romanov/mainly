@@ -353,7 +353,7 @@ else:
 	                temperature=0.7  # Уровень случайности вывода модели
 	                )
 	            st.write(response.choices[0].message.content)
-	            update_answers_user(book_id, chapter_id,user_id, user_input, "response.choices[0].message.content", st.session_state.question_index)
+	            update_answers_user(book_id, chapter_id,user_id, user_input, response.choices[0].message.content, st.session_state.question_index)
 
         else:
             user_input = st.text_area("Напишите ваш текст ниже:")
@@ -377,7 +377,7 @@ else:
                     temperature=0.7  # Уровень случайности вывода модели
                 )
                 st.write(response.choices[0].message.content)
-                add_content_answers_user(book_id, chapter_id,user_id, user_input, "response.choices[0].message.content", st.session_state.question_index)
+                add_content_answers_user(book_id, chapter_id,user_id, user_input, response.choices[0].message.content, st.session_state.question_index)
 
         if st.button("Следующий вопрос"):
             print("current_index = ", st.session_state.question_index)
