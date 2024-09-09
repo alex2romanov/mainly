@@ -26,7 +26,8 @@ def setup_database():
 def logout():
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    st.experimental_rerun()
+    # st.experimental_rerun()
+    st.rerun()
 
 
 def register_user(username, password):
@@ -98,8 +99,20 @@ def update_answers_user(book_id, chapter_id, user_id, text_user, text_gpt, id_qu
     gpt_column = f'answers_gpt{id_question}'
     c.execute(f'''
         UPDATE summary_questions
-        SET {user_column} = ?, {gpt_column} = ?, user_id = ?
-        WHERE name_book = ? AND id_chapter = ?
+        SET {user_column} = ?, {gpt_column} = ?
+        WHERE name_book = ? AND id_chapter = ? AND user_id = ?
+    ''', (text_user,text_gpt,  book_id, chapter_id, user_id))
+    conn.commit()
+    conn.close()
+
+def add_content_answers_user(book_id, chapter_id, user_id, text_user, text_gpt, id_question):
+    conn = sqlite3.connect('summary_questions1_v2.sqlite')
+    c = conn.cursor()
+    user_column = f'answers_user{id_question}'
+    gpt_column = f'answers_gpt{id_question}'
+    c.execute(f'''
+        INSERT INTO summary_questions ({user_column}, {gpt_column}, user_id, name_book, id_chapter)
+        VALUES (?, ?, ?, ?, ?)
     ''', (text_user,text_gpt, user_id,  book_id, chapter_id))
     conn.commit()
     conn.close()
@@ -109,15 +122,33 @@ def get_user_answers(book_id, chapter_id, user_id, id_question):
     c = conn.cursor()
     user_column = f'answers_user{id_question}'
     gpt_column = f'answers_gpt{id_question}'
+    #SELECT {user_column}, {gpt_column} FROM summary_questions
     c.execute(f'''
-        SELECT {user_column}, {gpt_column} FROM summary_questions
+        SELECT 
+        count(*), {user_column}, {gpt_column}
+        FROM summary_questions
         WHERE name_book = ? AND id_chapter = ? AND user_id = ?
     ''', (book_id, chapter_id, user_id))
     answers = c.fetchone()
     conn.close()
     if answers == None:
-        return (None, None)
+        return (None, None, None)
     return answers
+
+def write_text_chapter(book_id, chapter_id):
+    conn = sqlite3.connect('summary_questions1_v2.sqlite')
+    c = conn.cursor()
+    c.execute(f'''
+        SELECT 
+        full_text_chapter
+        FROM summary_questions
+        WHERE name_book = ? AND id_chapter = ?
+        limit 1
+    ''', (book_id, chapter_id))
+    answers = c.fetchone()
+    conn.close()
+    st.write(answers[0])
+    return answers[0]
 
 
 
@@ -292,59 +323,62 @@ else:
         # Check and display previous answers
         previous_answers = get_user_answers(book_id, chapter_id, user_id, st.session_state.question_index )
         print(book_id, chapter_id, user_id, st.session_state.question_index)
-        print(previous_answers)
-        if previous_answers != (None, None):
-            st_write_large_text("Вы уже отвечали на эти вопросы.")
-            st.write(f"Ваш предыдущий ответ: {previous_answers[0]}")
-            st.write(f"Ответ GPT: {previous_answers[1]}")
+        print("previous_answers= ", previous_answers)
+        print("previous_answers[0]= ", previous_answers[0])
+        if previous_answers[0] == 1:
+            if previous_answers[1] != None:
+                st_write_large_text("Вы уже отвечали на эти вопросы.")
+                st.write(f"Ваш предыдущий ответ: {previous_answers[1]}")
+                st.write(f"Ответ GPT: {previous_answers[2]}")
+                st_write_large_text("Если вы хотите еще раз ответить, напишите ответ ниже")
 
-            st_write_large_text("Если вы хотите еще раз ответить, напишите ответ ниже")
             user_input = st.text_area("Напишите ваш текст ниже:")
             if st.button('Сохранить текст'):
 	            print("1111111")
 	            # add_content(book_id, chapter_id, user_input, st.session_state.question_index )
 	            # print("22222222")
 	            st.success("Ваш текст был сохранен!")
-	            prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
-	            api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
-	            client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
+	            # prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
+	            # api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
+	            # client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
 
-	            response = client.chat.completions.create(
-	                model="gpt-4o-mini", # Или gpt-4,
-	                # в данной задаче грейдер не проверяет какую модель вы выбрали,
-	                # но советуем попробовать gpt-4 в качестве экперимента.
-	                messages=[{
-	                        "role": "user",
-	                        "content": prompt_example,}
-	                ],
-	                temperature=0.7  # Уровень случайности вывода модели
-	                )
-	            st.write(response.choices[0].message.content)
-	            update_answers_user(book_id, chapter_id,user_id, user_input, response.choices[0].message.content, st.session_state.question_index)
+	            # response = client.chat.completions.create(
+	            #     model="gpt-4o-mini", # Или gpt-4,
+	            #     # в данной задаче грейдер не проверяет какую модель вы выбрали,
+	            #     # но советуем попробовать gpt-4 в качестве экперимента.
+	            #     messages=[{
+	            #             "role": "user",
+	            #             "content": prompt_example,}
+	            #     ],
+	            #     temperature=0.7  # Уровень случайности вывода модели
+	            #     )
+	            st.write("response.choices[0].message.content")
+	            update_answers_user(book_id, chapter_id,user_id, user_input, "response.choices[0].message.content", st.session_state.question_index)
 
         else:
             user_input = st.text_area("Напишите ваш текст ниже:")
             if st.button('Сохранить текст'):
                 #add_content(book_id, chapter_id, user_input, st.session_state.question_index )
                 #st.success("Ваш текст был сохранен!")
-                prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
-                api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
-                client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
+                # prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
+                # api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
+                # client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
 
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini", # Или gpt-4,
-                    # в данной задаче грейдер не проверяет какую модель вы выбрали,
-                    # но советуем попробовать gpt-4 в качестве экперимента.
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": prompt_example,
-                        }
-                    ],
-                    temperature=0.7  # Уровень случайности вывода модели
-                )
-                st.write(response.choices[0].message.content)
-                update_answers_user(book_id, chapter_id,user_id, user_input, response.choices[0].message.content, st.session_state.question_index)
+                # response = client.chat.completions.create(
+                #     model="gpt-4o-mini", # Или gpt-4,
+                #     # в данной задаче грейдер не проверяет какую модель вы выбрали,
+                #     # но советуем попробовать gpt-4 в качестве экперимента.
+                #     messages=[
+                #         {
+                #             "role": "user",
+                #             "content": prompt_example,
+                #         }
+                #     ],
+                #     temperature=0.7  # Уровень случайности вывода модели
+                # )
+                print("I am here")
+                st.write("response.choices[0].message.content")
+                add_content_answers_user(book_id, chapter_id,user_id, user_input, "response.choices[0].message.content", st.session_state.question_index)
 
         if st.button("Следующий вопрос"):
             print("current_index = ", st.session_state.question_index)
@@ -364,6 +398,8 @@ else:
             #st.experimental_rerun()
             st.rerun()
 
+        if st.button('Прочитать главу'):
+            write_text_chapter(book_id, chapter_id)
     # else:
     #     st_write_large_text("Вы ответили на все вопросы в этой главе.")
     #     if st.button('Вернуться к выбору глав'):
