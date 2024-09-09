@@ -338,21 +338,21 @@ else:
 	            # add_content(book_id, chapter_id, user_input, st.session_state.question_index )
 	            # print("22222222")
 	            st.success("Ваш текст был сохранен!")
-	            # prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
-	            # api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
-	            # client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
+	            prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
+	            api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
+	            client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
 
-	            # response = client.chat.completions.create(
-	            #     model="gpt-4o-mini", # Или gpt-4,
-	            #     # в данной задаче грейдер не проверяет какую модель вы выбрали,
-	            #     # но советуем попробовать gpt-4 в качестве экперимента.
-	            #     messages=[{
-	            #             "role": "user",
-	            #             "content": prompt_example,}
-	            #     ],
-	            #     temperature=0.7  # Уровень случайности вывода модели
-	            #     )
-	            st.write("response.choices[0].message.content")
+	            response = client.chat.completions.create(
+	                model="gpt-4o-mini", # Или gpt-4,
+	                # в данной задаче грейдер не проверяет какую модель вы выбрали,
+	                # но советуем попробовать gpt-4 в качестве экперимента.
+	                messages=[{
+	                        "role": "user",
+	                        "content": prompt_example,}
+	                ],
+	                temperature=0.7  # Уровень случайности вывода модели
+	                )
+	            st.write(response.choices[0].message.content)
 	            update_answers_user(book_id, chapter_id,user_id, user_input, "response.choices[0].message.content", st.session_state.question_index)
 
         else:
@@ -360,24 +360,23 @@ else:
             if st.button('Сохранить текст'):
                 #add_content(book_id, chapter_id, user_input, st.session_state.question_index )
                 #st.success("Ваш текст был сохранен!")
-                # prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
-                # api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
-                # client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
+                prompt_example = f'''Ты помогаешь оценить насколько правильный ответ по тексту. Есть текст: {summary}. На вопрос: {questions} был получен ответ: {user_input}. Оцени ответ и дай свою обратную связь'''
+                api_key='sk-H1d1x8cV1k0UHZJzRkCzdTYSXbPjMqJ0'
+                client = OpenAI(api_key=api_key, base_url="https://api.proxyapi.ru/openai/v1")
 
-                # response = client.chat.completions.create(
-                #     model="gpt-4o-mini", # Или gpt-4,
-                #     # в данной задаче грейдер не проверяет какую модель вы выбрали,
-                #     # но советуем попробовать gpt-4 в качестве экперимента.
-                #     messages=[
-                #         {
-                #             "role": "user",
-                #             "content": prompt_example,
-                #         }
-                #     ],
-                #     temperature=0.7  # Уровень случайности вывода модели
-                # )
-                print("I am here")
-                st.write("response.choices[0].message.content")
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini", # Или gpt-4,
+                    # в данной задаче грейдер не проверяет какую модель вы выбрали,
+                    # но советуем попробовать gpt-4 в качестве экперимента.
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt_example,
+                        }
+                    ],
+                    temperature=0.7  # Уровень случайности вывода модели
+                )
+                st.write(response.choices[0].message.content)
                 add_content_answers_user(book_id, chapter_id,user_id, user_input, "response.choices[0].message.content", st.session_state.question_index)
 
         if st.button("Следующий вопрос"):
